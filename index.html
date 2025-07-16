@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vag Tarek Vag - Enhanced</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ground: #444;
+      --text: #222;
+      --shadow: rgba(0,0,0,0.3);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      transition: background 0.5s;
+      font-family: 'Arial', sans-serif;
+      perspective: 1000px;
+    }
+
+    #game-container {
+      width: 100%;
+      max-width: 700px;
+      padding: 0 20px;
+    }
+
+    #game {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      border: 2px solid var(--ground);
+      background-image: url('https://files.catbox.moe/8pisas.png');
+      background-size: cover;
+      background-position: center;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      box-shadow: 0 10px 20px var(--shadow);
+    }
+
+    #ground {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--ground);
+      transform: translateZ(-10px);
+    }
+
+    #dino {
+      position: absolute;
+      bottom: 4px;
+      left: 50px;
+      width: 60px;
+      height: 65px;
+      background: url('https://files.catbox.moe/cbqo7y.png') no-repeat;
+      background-size: cover;
+      transform: translateZ(10px);
+      transition: transform 0.1s;
+    }
+
+    #obstacle, #obstacle2, #obstacle3 {
+      position: absolute;
+      bottom: 4px;
+      background-size: cover;
+      background-repeat: no-repeat;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      transform: translateZ(5px);
+    }
+
+    #obstacle {
+      width: 50px;
+      height: 80px;
+      left: 100%;
+      background-image: url('https://files.catbox.moe/khqhwm.png');
+      animation-name: moveObstacle;
+      animation-duration: 3s;
+    }
+
+    #obstacle2 {
+      width: 60px;
+      height: 65px;
+      left: 100%;
+      background-image: url('https://files.catbox.moe/ja7sqr.png');
+      animation: none;
+    }
+
+    #obstacle3 {
+      width: 40px;
+      height: 90px;
+      left: 100%;
+      background-image: url('https://files.catbox.moe/khqhwm.png');
+      animation: none;
+      transform: scaleX(-1) translateZ(5px);
+    }
+
+    @keyframes moveObstacle {
+      0% { left: 100%; }
+      100% { left: -60px; }
+    }
+
+    @keyframes moveObstacle2 {
+      0% { left: 130%; }
+      100% { left: -60px; }
+    }
+
+    @keyframes moveObstacle3 {
+      0% { left: 160%; }
+      100% { left: -60px; }
+    }
+
+    #cloud {
+      position: absolute;
+      top: 20px;
+      left: -100px;
+      width: 140px;
+      height: 70px;
+      background: url('https://files.catbox.moe/2ncjks.png') no-repeat center;
+      background-size: contain;
+      animation: moveCloud 12s linear infinite;
+      opacity: 0.7;
+      transform: translateZ(0);
+    }
+
+    @keyframes moveCloud {
+      from { left: -100px; }
+      to { left: 100%; }
+    }
+
+    .jump {
+      animation: jump 0.6s ease-out;
+    }
+
+    @keyframes jump {
+      0% { bottom: 4px; transform: translateZ(10px) rotateX(0); }
+      50% { bottom: 140px; transform: translateZ(30px) rotateX(-20deg); }
+      100% { bottom: 4px; transform: translateZ(10px) rotateX(0); }
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px var(--shadow);
+    }
+
+    #high-score {
+      position: absolute;
+      top: 30px;
+      left: 10px;
+      color: var(--text);
+      font-size: 12px;
+      text-shadow: 1px 1px 1px var(--shadow);
+    }
+
+    #gameOver {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 22px;
+      color: red;
+      text-align: center;
+      text-shadow: 2px 2px 4px var(--shadow);
+      z-index: 100;
+    }
+
+    #touchArea {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+    }
+
+    #toggleMode {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 20;
+      background: rgba(204,204,204,0.7);
+      color: #000;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+
+    #toggleMode:hover {
+      background: rgba(204,204,204,1);
+    }
+
+    #startBtn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 30;
+      padding: 10px 20px;
+      font-size: 20px;
+      cursor: pointer;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px var(--shadow);
+      transition: all 0.3s;
+    }
+
+    #startBtn:hover {
+      background: #218838;
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+
+    #devLink {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      text-decoration: none;
+      background: #24292e;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 50;
+      transition: all 0.3s;
+    }
+
+    #devLink:hover {
+      background: #3f4448;
+    }
+
+    .jump-effect {
+      position: absolute;
+      width: 40px;
+      height: 20px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 50%;
+      filter: blur(5px);
+      bottom: 0;
+      left: 10px;
+      transform: scale(0);
+      animation: jumpEffect 0.6s ease-out;
+    }
+
+    @keyframes jumpEffect {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    body.night {
+      --bg: #1e1e1e;
+      --ground: #eee;
+      --text: #eee;
+      --shadow: rgba(0,0,0,0.7);
+    }
+
+    @media (max-width: 500px) {
+      #game {
+        height: 150px;
+      }
+      
+      #dino {
+        width: 40px;
+        height: 45px;
+      }
+      
+      #obstacle {
+        width: 30px;
+        height: 50px;
+      }
+      
+      #obstacle2 {
+        width: 40px;
+        height: 45px;
+      }
+      
+      @keyframes jump {
+        0% { bottom: 4px; }
+        50% { bottom: 90px; }
+        100% { bottom: 4px; }
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="game">
+      <button id="toggleMode">🌙 Night</button>
+      <button id="startBtn">▶️ Start Now</button>
+      <div id="touchArea"></div>
+      <div id="cloud"></div>
+      <div id="dino"></div>
+      <div id="obstacle"></div>
+      <div id="obstacle2"></div>
+      <div id="obstacle3"></div>
+      <div id="ground"></div>
+      <div id="score">Score: 0</div>
+      <div id="high-score">High: 0</div>
+      <div id="gameOver">Game Sesh Bokchud<br>Game khelte tip mar</div>
+      <a id="devLink" href="https://github.com/frn" target="_blank">👨‍💻 GitHub</a>
+    </div>
+  </div>
+
+  <audio id="bgm" loop>
+    <source src="https://files.catbox.moe/368qbm.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="jumpSound">
+    <source src="https://www.soundjay.com/buttons/sounds/button-09.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="gameOverSound">
+    <source src="https://www.soundjay.com/buttons/sounds/button-10.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const dino = document.getElementById("dino");
+    const obstacle = document.getElementById("obstacle");
+    const obstacle2 = document.getElementById("obstacle2");
+    const obstacle3 = document.getElementById("obstacle3");
+    const scoreDisplay = document.getElementById("score");
+    const highScoreDisplay = document.getElementById("high-score");
+    const gameOverText = document.getElementById("gameOver");
+    const touchArea = document.getElementById("touchArea");
+    const toggleBtn = document.getElementById("toggleMode");
+    const startBtn = document.getElementById("startBtn");
+    const bgm = document.getElementById("bgm");
+    const jumpSound = document.getElementById("jumpSound");
+    const gameOverSound = document.getElementById("gameOverSound");
+    const gameContainer = document.getElementById("game-container");
+    const game = document.getElementById("game");
+
+    let isJumping = false;
+    let score = 0;
+    let highScore = localStorage.getItem('highScore') || 0;
+    let gameOver = false;
+    let obstacle2Enabled = false;
+    let obstacle3Enabled = false;
+    let gameStarted = false;
+    let gameSpeed = 3;
+    let gameInterval;
+    let jumpCount = 0;
+    const maxJumps = 2;
+
+    highScoreDisplay.textContent = `High: ${highScore}`;
+
+    function safePlay(audio) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => console.warn("Audio play failed:", err));
+      }
+    }
+
+    function createJumpEffect() {
+      const effect = document.createElement('div');
+      effect.className = 'jump-effect';
+      game.appendChild(effect);
+      setTimeout(() => effect.remove(), 600);
+    }
+
+    function jump() {
+      if ((!isJumping || jumpCount < maxJumps) && !gameOver && gameStarted) {
+        if (isJumping) jumpCount++;
+        isJumping = true;
+        dino.classList.add("jump");
+        createJumpEffect();
+        jumpSound.currentTime = 0;
+        safePlay(jumpSound);
+        setTimeout(() => {
+          dino.classList.remove("jump");
+          if (jumpCount >= maxJumps) {
+            isJumping = false;
+            jumpCount = 0;
+          }
+        }, 600);
+      }
+    }
+
+    function restartGame() {
+      window.location.reload();
+    }
+
+    function startGame() {
+      gameStarted = true;
+      startBtn.style.display = "none";
+      score = 0;
+      scoreDisplay.textContent = `Score: ${score}`;
+      gameOverText.style.display = "none";
+      gameOver = false;
+
+      bgm.volume = 0.15;
+      bgm.load();
+      jumpSound.load();
+      gameOverSound.load();
+      safePlay(bgm);
+
+      obstacle.style.animation = `moveObstacle ${gameSpeed}s linear infinite`;
+      obstacle.style.left = "100%";
+
+      gameInterval = setInterval(() => {
+        const dinoRect = dino.getBoundingClientRect();
+        const dinoBottom = parseInt(getComputedStyle(dino).bottom);
+        const dinoLeft = parseInt(getComputedStyle(dino).left);
+        const dinoWidth = parseInt(getComputedStyle(dino).width);
+        const dinoHeight = parseInt(getComputedStyle(dino).height);
+
+        const obs1 = obstacle.getBoundingClientRect();
+        const obs2 = obstacle2.getBoundingClientRect();
+        const obs3 = obstacle3.getBoundingClientRect();
+
+        // Enable obstacles as score increases
+        if (score >= 200 && !obstacle2Enabled) {
+          obstacle2.style.animation = `moveObstacle2 ${gameSpeed-0.5}s linear infinite`;
+          obstacle2Enabled = true;
+        }
+
+        if (score >= 500 && !obstacle3Enabled) {
+          obstacle3.style.animation = `moveObstacle3 ${gameSpeed-1}s linear infinite`;
+          obstacle3Enabled = true;
+        }
+
+        // Increase speed every 500 points
+        if (score > 0 && score % 500 === 0) {
+          gameSpeed = Math.max(1, gameSpeed * 0.9);
+          obstacle.style.animationDuration = `${gameSpeed}s`;
+          if (obstacle2Enabled) obstacle2.style.animationDuration = `${gameSpeed-0.5}s`;
+          if (obstacle3Enabled) obstacle3.style.animationDuration = `${gameSpeed-1}s`;
+        }
+
+        // Collision detection
+        if (
+          (obs1.left < dinoRect.right && obs1.right > dinoRect.left && obs1.top < dinoRect.bottom) ||
+          (obstacle2Enabled && obs2.left < dinoRect.right && obs2.right > dinoRect.left && obs2.top < dinoRect.bottom) ||
+          (obstacle3Enabled && obs3.left < dinoRect.right && obs3.right > dinoRect.left && obs3.top < dinoRect.bottom)
+        ) {
+          gameOver = true;
+          obstacle.style.animation = "none";
+          if (obstacle2Enabled) obstacle2.style.animation = "none";
+          if (obstacle3Enabled) obstacle3.style.animation = "none";
+          gameOverText.style.display = "block";
+          bgm.pause();
+          gameOverSound.currentTime = 0;
+          safePlay(gameOverSound);
+          clearInterval(gameInterval);
+          
+          // Update high score
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('highScore', highScore);
+            highScoreDisplay.textContent = `High: ${highScore}`;
+          }
+        }
+
+        if (!gameOver) {
+          score++;
+          scoreDisplay.textContent = `Score: ${score}`;
+        }
+      }, 20);
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      document.body.classList.toggle("night");
+      toggleBtn.textContent = document.body.classList.contains("night") ? "☀️ Day" : "🌙 Night";
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space" || e.code === "ArrowUp") jump();
+      if (gameOver && (e.code === "Space" || e.code === "Enter")) restartGame();
+    });
+
+    touchArea.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      if (gameOver) restartGame();
+      else jump();
+    });
+
+    startBtn.addEventListener("click", startGame);
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      const gameWidth = gameContainer.offsetWidth;
+      game.style.width = `${gameWidth}px`;
+    });
+  </script>
+</body>
+</html>
